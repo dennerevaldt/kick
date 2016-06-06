@@ -1,0 +1,10 @@
+{
+	"mysql" : {
+		"username": "root",
+    	"password": "",
+    	"server": "localhost",
+    	"database": "kick-api",
+    	"dialect": "mysql"
+	},
+	"jwtTokenSecret": "Death Star"
+}
