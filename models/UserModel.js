@@ -7,35 +7,27 @@ function UserDAO(model) {
 	this.model = model;
 }
 
-UserDAO.prototype.create = function(data, callback) {
-  	// var model = new this.model(data);
-	// model.save(function(err, result) {
-	// 	callback(err, result);
-	// });
-	this.model.create(data).then(callback);
+UserDAO.prototype.create = function(data) {
+	return this.model.create(data);
 };
 
-UserDAO.prototype.find = function(query, callback) {
-	this.model.all({}).then(callback);
+UserDAO.prototype.find = function(query) {
+	return this.model.all({});
 };
 
-UserDAO.prototype.findOne = function(_id, callback) {
-	// var query = { _id : _id };
-	// this.model.findOne(query).exec(callback);
+UserDAO.prototype.findOne = function(_id) {
+	var query = { where: { id : _id } };
+	return this.model.findOne(query);
 };
 
-UserDAO.prototype.update = function(_id, data, callback) {
-	// var query = { _id : _id };
-	// this.model.update(query, data).exec(function(err, result) {
-	// 	callback(err, result);
-	// });
+UserDAO.prototype.update = function(_id, data) {
+	var query = { where: { id : _id } };
+	return this.model.update(data, query);
 };
 
 UserDAO.prototype.remove = function(_id, callback) {
-	// var query = { _id : _id };
-	// this.model.remove(query).exec(function(err, result) {
-	//     callback(err, result);
- //  	});
+	var query = { where: { id : _id } };
+	return this.model.destroy(query);
 };
 
 var User = db.define('users', {
