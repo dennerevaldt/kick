@@ -1,11 +1,10 @@
 var debug   = require('debug')('api:controller:auth');
 var jwt     = require('jwt-simple'),
     moment  = require('moment'),
-    config  = require('config'),
-    Promise = require('bluebird');
+    config  = require('config');
 
-function AuthController(UserModel) {
-    this.model = Promise.promisifyAll(UserModel);
+function AuthController(PersonModel) {
+    this.model = PersonModel;
 }
 
 AuthController.prototype.middlewareAuth = function(request, response, next) {
@@ -24,7 +23,6 @@ AuthController.prototype.middlewareAuth = function(request, response, next) {
 	        return next(err);
 	    } else {
 	        request.user = decoded.user;
-	        console.log(request.user);
 	        next();
 	    }
   	} catch(err) {
@@ -35,10 +33,15 @@ AuthController.prototype.middlewareAuth = function(request, response, next) {
 AuthController.prototype.token = function(request, response, next) {
     var username = request.body.username;
     var password = request.body.password;
-
-    this.model.findAsync(request.body)
-          .then(function(data) {
-              	if (data.length) {
+    if(!username || !password) {
+        var err = new Error('Bad request');
+        err.status = 400;
+        return next(err);
+    }
+    this.model.find({username: username})
+        .then(function(data) {
+          	if (data) {
+                if (data.validPassword(password, data.password)) {
                   	var expires = moment().add(7, 'days').valueOf();
                   	var token = jwt.encode({
                     	user: username,
@@ -53,10 +56,15 @@ AuthController.prototype.token = function(request, response, next) {
                   	err.status = 401;
                   	next(err);
               	}
-          })
-      .catch(next);
+            } else {
+                var err = new Error('Login inexistent');
+                err.status = 404;
+                next(err);
+            }
+        })
+        .catch(next);
 };
 
-module.exports = function(UserModel) {
-    return new AuthController(UserModel);
+module.exports = function(PersonModel) {
+    return new AuthController(PersonModel);
 };

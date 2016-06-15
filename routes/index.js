@@ -1,12 +1,12 @@
 var express = require('express'),
   	router = express.Router();
 
-var UserModel = require('../models/UserModel');
-var AuthController = require('../controllers/AuthController')(UserModel);
+var PersonModel = require('../models/PersonModel');
+var AuthController = require('../controllers/AuthController')(PersonModel);
 
 router.post('/token', AuthController.token.bind(AuthController));
 
-// user
-router.use('/user', require('./user'));
+// player
+router.use('/player', require('./player'));
 
 module.exports = router;
