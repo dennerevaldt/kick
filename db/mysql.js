@@ -20,24 +20,4 @@ var db = new sequelize(
 	  	// storage: 'path/to/database.sqlite'
 	});
 
-db.authenticate()
-    .then(function () {
-        debug("CONECTADO! ");
-    })
-    .catch(function (err) {
-        debug("ERRO NA CONEXÃO!");
-    })
-    .done();
-
-db.sync({
-		force: true,
-		logging: debug
-	})
-	.then(function(){
-		debug("SINCRONIZADO! ");
-	})
-	.catch(function(err){
-		debug("ERRO AO SINCRONIZAR COM DB!");
-	});
-
 module.exports = db;

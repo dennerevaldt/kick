@@ -1,4 +1,5 @@
-var debug = require('debug')('api:ctrlplayer');
+var debug = require('debug')('api:ctrlPlayer');
+var models = require('../models');
 
 var handleNotFound = function(data) {
     if(!data) {
@@ -14,16 +15,32 @@ function PlayerController(PlayerModel) {
 }
 
 PlayerController.prototype.getAll = function(request, response, next) {
-  	this.model.findAll({})
-        .then(function(data) {
-            response.json(data);
-        })
+  	var query = {
+        include: [{
+            model: models.Person, 
+            attributes: {exclude: ['password']} 
+        }]
+    };
+
+    this.model.findAll(query)
+    .then(function(data) {
+        response.json(data);
+    })
     .catch(next);
 };
 
 PlayerController.prototype.getById = function(request, response, next) {
-  	var _id = request.params._id;
-  	this.model.findOne(_id)
+    var query = {
+        where: {id : request.params._id},
+        include: [{
+            model: models.Person,
+            attributes: {
+                exclude: ['password']
+            }
+        }]
+    };
+
+  	this.model.find(query)
         .then(handleNotFound)
         .then(function(data){
             response.json(data);
@@ -33,48 +50,98 @@ PlayerController.prototype.getById = function(request, response, next) {
 
 PlayerController.prototype.create = function(request, response, next) {
   	var body = request.body;
-    
-    var person = {
+
+    var _person = {
         username: body.username,
         password: body.password,
         fullname: body.fullname,
         email: body.email,
-        district: body.district
+        district: body.district,
+        typeperson: 'P',
+        lat: body.lat,
+        lng: body.lng
     };
 
-    var player = {
-        id: null,
-        position: body.position
-    };
+    this.model.create({
+        position: body.position,
+        Person: _person
+    }, {
+        include: [models.Person]
+    })
+    .then(function(data){
+        response.json(data);
+    })
+    .catch(next);
 
-    var dataParam = {};
-    dataParam.person = person;
-    dataParam.player = player;
-
-    this.model.create(dataParam)
-            .then(function(data) {
-                response.json(data);
-            })
-        .catch(next);
 };
 
 PlayerController.prototype.update = function(request, response, next) {
-  	var _id  = request.params._id,
+    var _id  = request.params._id,
         body = request.body;
-  	this.model.update(_id, body)
-        .then(function(err, data) {
-            response.json(data);
+
+    var _person = {
+        username: body.username,
+        fullname: body.fullname,
+        email: body.email,
+        district: body.district,
+        typeperson: 'P',
+        lat: body.lat,
+        lng: body.lng
+    };
+
+    var _player = {
+        position: body.position
+    };
+	
+  	var query = {
+        where: {id : _id},
+        include: [{
+            model: models.Person,
+            attributes: {
+                exclude: ['password']
+            }
+        }]
+    };
+
+    this.model.find(query)
+        .then(handleNotFound)
+        .then(function(data){
+            data.Person.update(_person)
+                .then(function(person){
+                    data.update(_player)
+                        .then(function(player){
+                        response.json(player);
+                    })
+                    .catch(next);
+            })
+            .catch(next);
         })
     .catch(next);
 };
 
 PlayerController.prototype.remove = function(request, response, next) {
-  	var _id = request.params._id;
-  	this.model.remove(_id)
-        .then(function(err, data) {
-            response.json(data);
+    var _id  = request.params._id;
+
+    var query = {
+        where: {id : _id},
+        include: [{
+            model: models.Person,
+            attributes: {
+                exclude: ['password']
+            }
+        }]
+    };
+
+    this.model.find(query)
+        .then(handleNotFound)
+        .then(function(data){
+            data.Person.destroy()
+                .then(function(data){
+                    response.json(data);
+                })
+                .catch(next);
         })
-    .catch(next);
+        .catch(next);
 };
 
 module.exports = function(PlayerModel) {

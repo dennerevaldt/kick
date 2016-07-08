@@ -1,9 +1,9 @@
 var express = require('express'),
     router  = express.Router();
 
-var PlayerModel = require('../models/PlayerModel');
-var PlayerController = require('../controllers/PlayerController')(PlayerModel);
-var AuthController = require('../controllers/AuthController')(PlayerModel);
+var models = require('../models');
+var PlayerController = require('../controllers/PlayerController')(models.Player);
+var AuthController = require('../controllers/AuthController')(models.Person);
 
 // router.use(AuthController.middlewareAuth);
 

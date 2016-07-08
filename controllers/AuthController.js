@@ -1,7 +1,8 @@
 var debug   = require('debug')('api:controller:auth');
 var jwt     = require('jwt-simple'),
     moment  = require('moment'),
-    config  = require('config');
+    config  = require('config'),
+    models  = require('../models');
 
 function AuthController(PersonModel) {
     this.model = PersonModel;
@@ -22,7 +23,7 @@ AuthController.prototype.middlewareAuth = function(request, response, next) {
 	        err.status = 401;
 	        return next(err);
 	    } else {
-	        request.user = decoded.user;
+	        request.user = decoded;
 	        next();
 	    }
   	} catch(err) {
@@ -38,13 +39,15 @@ AuthController.prototype.token = function(request, response, next) {
         err.status = 400;
         return next(err);
     }
-    this.model.find({username: username})
+    this.model.findOne({ where: {username: username} })
         .then(function(data) {
           	if (data) {
                 if (data.validPassword(password, data.password)) {
                   	var expires = moment().add(7, 'days').valueOf();
                   	var token = jwt.encode({
-                    	user: username,
+                      id: data.id,
+                      typeperson: data.typeperson,
+                    	username: data.username,
                     	exp: expires
                   	}, config.get('jwtTokenSecret'));
 
@@ -63,6 +66,23 @@ AuthController.prototype.token = function(request, response, next) {
             }
         })
         .catch(next);
+};
+
+AuthController.prototype.userData = function(request, response, next) {
+    var _id = request.user.id;
+    var _type = request.user.typeperson === 'P' ? models.Player : models.Enterprise;
+    
+    _type.findOne({ 
+      where: {person_id: _id} ,
+      include: [{
+            model: this.model
+        }]
+    })
+        .then(function(data) {
+            response.json(data);
+        })
+        .catch(next);
+    
 };
 
 module.exports = function(PersonModel) {
