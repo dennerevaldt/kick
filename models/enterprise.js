@@ -8,8 +8,12 @@ module.exports = function(sequelize, DataTypes) {
         freezeTableName: true,
         classMethods: {
             associate: function(models) {
-                // associations can be defined here
+                // Person
                 Enterprise.belongsTo(models.Person, {foreignKey: 'person_id'});
+                // Court
+                Enterprise.hasMany(models.Court, {foreignKey: 'enterprise_id'});
+                // Schedules
+                Enterprise.hasMany(models.Schedule, {foreignKey: 'enterprise_id'});
             }
         }
     });

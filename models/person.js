@@ -37,7 +37,7 @@ module.exports = function(sequelize, DataTypes) {
             allowNull: false,
             validate: {
                 len: {
-                    args: [6, 8],
+                    args: [6, 100],
                     msg: 'Sua senha deve ter no mínimo 6 e no máximo 8 caracteres.'
                 }
             }
