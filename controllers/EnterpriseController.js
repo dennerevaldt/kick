@@ -1,5 +1,6 @@
 var debug = require('debug')('api:ctrlEnterprise');
 var models = require('../models');
+var sequelize = require('sequelize');
 
 var handleNotFound = function(data) {
     if(!data) {
@@ -27,6 +28,37 @@ EnterpriseController.prototype.getAll = function(request, response, next) {
         response.json(data);
     })
     .catch(next);
+};
+
+EnterpriseController.prototype.getAllProximity = function(request, response, next) {
+    var body = request.body;
+    var lat = body.lat;
+    var lng = body.lng;
+    
+    this.model.findAll({
+        include: [
+            { model: models.Person }
+        ],
+        attributes: [
+            'id',
+            'telephone',
+            'createdAt',
+            'updatedAt',
+            [sequelize.literal(' (6371 * acos ( '
+                + 'cos( radians('+lat+') ) '
+                + '* cos( radians( lat ) ) '
+                + '* cos( radians( lng ) - radians('+lng+') )' 
+                + '+ sin( radians('+lat+') )' 
+                + '* sin( radians( lat )))) ' ), 'distance']
+        ],
+        having: {
+           distance: {
+                $lte: 90 // KM's
+            }
+        }
+    }).then(function(data){
+        response.json(data);
+    }).catch(next);
 };
 
 EnterpriseController.prototype.getById = function(request, response, next) {
@@ -111,10 +143,13 @@ EnterpriseController.prototype.update = function(request, response, next) {
                     data.update(_enterprise)
                         .then(function(enterprise){
                         response.json(enterprise);
+                        return enterprise;
                     })
                     .catch(next);
+                return person;
             })
             .catch(next);
+            return data;
         })
     .catch(next);
 };
@@ -138,8 +173,10 @@ EnterpriseController.prototype.remove = function(request, response, next) {
             data.Person.destroy()
                 .then(function(data){
                     response.json(data);
+                    return data;
                 })
                 .catch(next);
+            return data;
         })
         .catch(next);
 };

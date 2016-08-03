@@ -1,4 +1,6 @@
-var debug = require('debug')('api:ctrlSchedule');
+var debug  = require('debug')('api:ctrlSchedule'),
+    models = require('../models'),
+    moment = require('moment');
 
 var handleNotFound = function(data) {
     if(!data) {
@@ -14,7 +16,38 @@ function ScheduleController(ScheduleModel) {
 }
 
 ScheduleController.prototype.getAll = function(request, response, next) {
-    this.model.findAll()
+    var query = {
+        where: {enterprise_id : request.user.typeid},
+        order: 'date',
+        include: [{
+            model: models.Court 
+        }]
+    };
+
+    this.model.findAll(query)
+    .then(function(data) {
+        response.json(data);
+    })
+    .catch(next);
+};
+
+ScheduleController.prototype.getAllById = function(request, response, next) {
+    var query = {
+        where: {
+            enterprise_id : request.params._id,
+            '$Game.schedule_id$': null,
+            date: {
+                $gte: moment().hour(-03).minute(00).second(00).format("YYYY-MM-DD HH:mm:ss")
+            }
+        },
+        order: 'date',
+        include: [
+            { model: models.Game },
+            { model: models.Court }
+        ]
+    };
+
+    this.model.findAll(query)
     .then(function(data) {
         response.json(data);
     })
@@ -23,7 +56,10 @@ ScheduleController.prototype.getAll = function(request, response, next) {
 
 ScheduleController.prototype.getById = function(request, response, next) {
     var query = {
-        where: {id : request.params._id}
+        where: {id : request.params._id},
+        include: [{
+            model: models.Court 
+        }]
     };
 
   	this.model.find(query)
@@ -41,7 +77,7 @@ ScheduleController.prototype.create = function(request, response, next) {
     	horary: body.horary,
     	date: body.date,
     	court_id: body.court_id,
-    	enterprise_id: body.enterprise_id
+    	enterprise_id: request.user.typeid
     })
     .then(function(data){
         response.json(data);
@@ -70,8 +106,10 @@ ScheduleController.prototype.update = function(request, response, next) {
             data.update(_schedule)
                 .then(function(schedule){
                     response.json(schedule);
-            })
-            .catch(next);
+                    return schedule;
+                })
+                .catch(next);
+            return data;
         })
     .catch(next);
 };

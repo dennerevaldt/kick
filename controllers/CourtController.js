@@ -1,4 +1,5 @@
-var debug = require('debug')('api:ctrlCourt');
+var debug  = require('debug')('api:ctrlCourt'),
+    models = require('../models');
 
 var handleNotFound = function(data) {
     if(!data) {
@@ -14,16 +15,26 @@ function CourtController(CourtModel) {
 }
 
 CourtController.prototype.getAll = function(request, response, next) {
-    this.model.findAll()
+    var query = {
+        where: {enterprise_id : request.user.typeid},
+        include: [{
+            model: models.Schedule
+        }]
+    };
+
+    this.model.findAll(query)
     .then(function(data) {
         response.json(data);
     })
-    .catch(next);
+     .catch(next);
 };
 
 CourtController.prototype.getById = function(request, response, next) {
     var query = {
-        where: {id : request.params._id}
+        where: {id : request.params._id},
+        include: [{
+            model: models.Schedule 
+        }]
     };
 
   	this.model.find(query)
@@ -40,7 +51,7 @@ CourtController.prototype.create = function(request, response, next) {
     this.model.create({
         name: body.name || "",
         category: body.category,
-        enterprise_id: body.enterprise_id
+        enterprise_id: request.user.typeid
     })
     .then(function(data){
         response.json(data);
@@ -68,8 +79,10 @@ CourtController.prototype.update = function(request, response, next) {
             data.update(_court)
                 .then(function(court){
                 	response.json(court);
-            })
-            .catch(next);
+                    return court;
+                })
+                .catch(next);
+            return data;
         })
     .catch(next);
 };

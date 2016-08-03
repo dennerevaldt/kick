@@ -19,5 +19,7 @@ router.use('/enterprise', require('./enterprise'));
 router.use('/court', require('./court'));
 // schedule
 router.use('/schedule', require('./schedule'));
+// game
+router.use('/game', require('./game'));
 
 module.exports = router;

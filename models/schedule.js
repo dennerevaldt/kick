@@ -14,7 +14,9 @@ var Schedule = sequelize.define('Schedule', {
         freezeTableName: true,
         classMethods: {
             associate: function(models) {
-            // associations can be defined here
+                // associations can be defined here
+                Schedule.belongsTo(models.Court, {foreignKey: 'court_id'});
+                Schedule.hasOne(models.Game, {foreignKey: 'schedule_id', onDelete: 'cascade', hooks: true});
             }
         }
     });

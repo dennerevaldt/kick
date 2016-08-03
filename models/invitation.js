@@ -1,8 +1,7 @@
 'use strict';
 module.exports = function(sequelize, DataTypes) {
-    var Court = sequelize.define('Court', {
-        name: DataTypes.STRING,
-        category: {
+    var Invitation = sequelize.define('Invitation', {
+        situation: {
             type: DataTypes.STRING,
             allowNull: false
         }
@@ -11,10 +10,10 @@ module.exports = function(sequelize, DataTypes) {
         freezeTableName: true,
         classMethods: {
             associate: function(models) {
-                // Schedules
-                Court.hasMany(models.Schedule, {foreignKey: 'court_id', onDelete: 'cascade', hooks: true});
+                // associations can be defined here
+                Invitation.belongsTo(models.Game, {foreignKey: 'game_id'});
             }
         }
     });
-    return Court;
+    return Invitation;
 };
